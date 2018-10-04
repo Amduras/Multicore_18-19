@@ -1,3 +1,4 @@
+import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
 
 public class MyThread extends Thread{
@@ -21,16 +22,22 @@ public class MyThread extends Thread{
 			if(counter % 2 == myId % 2 && next != null) {
 				if(number > next.getNumber()) {
 					swap(number, next.getNumber());
+					//System.out.println("Meine: "+number+" Next: "+next.getNumber()+" Ich bin Thread: "+myId);
 				}
 			}
-			System.out.println(getNumber());
+			++counter;
+			try {
+				barrier.await();
+			} catch (InterruptedException | BrokenBarrierException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}
 	}
 	
 	public void swap(int myNumber, int nextNumber) {
-		int tmp = myNumber;
-		myNumber = nextNumber;
-		nextNumber = tmp;
+		number = nextNumber;
+		next.setNumber(myNumber);
 	}
 	
 	public MyThread getNext() {
@@ -39,19 +46,35 @@ public class MyThread extends Thread{
 	public void setNext(MyThread next) {
 		this.next = next;
 	}
-	
 	public Integer getMyId() {
 		return myId;
 	}
-
 	public void setMyId(Integer myId) {
 		this.myId = myId;
 	}
-
 	public int getNumber() {
 		return number;
 	}
 	public void setNumber(int number) {
 		this.number = number;
 	}
+	public CyclicBarrier getBarrier() {
+		return barrier;
+	}
+	public void setBarrier(CyclicBarrier barrier) {
+		this.barrier = barrier;
+	}
+	public int getCounter() {
+		return counter;
+	}
+	public void setCounter(int counter) {
+		this.counter = counter;
+	}
+	public int getMaxThreads() {
+		return maxThreads;
+	}
+	public void setMaxThreads(int maxThreads) {
+		this.maxThreads = maxThreads;
+	}
+
 }
