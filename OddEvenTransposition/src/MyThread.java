@@ -19,7 +19,14 @@ public class MyThread extends Thread{
 	@Override
 	public void run() {
 		while(counter < maxThreads) {
+			try {
+				barrier.await();
+			} catch (InterruptedException | BrokenBarrierException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
 			if(counter % 2 == myId % 2 && next != null) {
+				System.out.println("Kern: "+(myId+1)+" aktiv");
 				if(number > next.getNumber()) {
 					swap(number, next.getNumber());
 					//System.out.println("Meine: "+number+" Next: "+next.getNumber()+" Ich bin Thread: "+myId);
@@ -33,6 +40,7 @@ public class MyThread extends Thread{
 				e.printStackTrace();
 			}
 		}
+		System.out.println("Kern: "+(myId+1)+" done");
 	}
 	
 	public void swap(int myNumber, int nextNumber) {

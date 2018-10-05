@@ -9,10 +9,9 @@ public class Controller {
 	CyclicBarrier barrier;
 	
 	Controller(int amountZahlen) throws InterruptedException, BrokenBarrierException{
-		
 		maxThreads = test.length;
 		threads = new MyThread[amountZahlen];
-		barrier = new CyclicBarrier(amountZahlen);
+		barrier = new CyclicBarrier(amountZahlen+1);
 		doit();
 	}
 	
@@ -20,7 +19,7 @@ public class Controller {
 		for(int i = 0; i < maxThreads; ++i) {
 			threads[i] = new MyThread(i, test[i], barrier, maxThreads);
 		}
-		
+		System.out.println("Vor dem Sortieren:");
 		printIt();
 		
 		for(int i = 0; i < maxThreads-1; ++i) {
@@ -31,12 +30,8 @@ public class Controller {
 			threads[i].start();
 		}
 		barrier.await();
+		System.out.println("Nach dem Sortieren:");
 		printIt();
-		for(int i = 0; i < maxThreads; ++i) {
-			if(threads[i].isInterrupted()) {
-				System.out.println("Thread: "+threads[i]+" beendet");
-			}
-		}
 	}
 	
 	public void printIt() {
