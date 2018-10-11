@@ -3,19 +3,20 @@ import java.util.concurrent.CyclicBarrier;
 
 public class MyThread extends Thread{
 	
-	private MyThread next;
+	private MyThread next = null;
 	private Integer myId;
 	private int number;
 	private CyclicBarrier barrier;
 	private int counter = 0;
 	private int maxThreads;
 	
-	public MyThread(int name, int number, CyclicBarrier barrier, int maxThreads) {
+	public MyThread(Integer name, int number, CyclicBarrier barrier, int maxThreads) {
 		myId = name;
 		this.number = number;
 		this.barrier = barrier;
 		this.maxThreads = maxThreads;
 	}
+	
 	@Override
 	public void run() {
 		while(counter < maxThreads) {
@@ -26,10 +27,8 @@ public class MyThread extends Thread{
 				e1.printStackTrace();
 			}
 			if(counter % 2 == myId % 2 && next != null) {
-				System.out.println("Kern: "+(myId+1)+" aktiv");
 				if(number > next.getNumber()) {
 					swap(number, next.getNumber());
-					//System.out.println("Meine: "+number+" Next: "+next.getNumber()+" Ich bin Thread: "+myId);
 				}
 			}
 			++counter;
@@ -40,7 +39,6 @@ public class MyThread extends Thread{
 				e.printStackTrace();
 			}
 		}
-		System.out.println("Kern: "+(myId+1)+" done");
 	}
 	
 	public void swap(int myNumber, int nextNumber) {
