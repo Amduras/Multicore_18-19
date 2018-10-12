@@ -1,6 +1,8 @@
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Random;
 import java.util.concurrent.BrokenBarrierException;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
 
 
@@ -8,80 +10,90 @@ public class Controller {
 	/************************************/
 	boolean checkSorted = true;
 	boolean printItBefore = false;
-	boolean printItAfter = false;
+	boolean printItAfter = true;
 	int seed = 1234;
 	int maxWerte = Integer.MAX_VALUE;
+	int cores;
+	int coreNumbers;
 	/***********************************/
 	
-	int[] zahlen;
-	int[] sorted;
-	int maxThreads;
+	int[][] zahlen;
+	//int[][] zahlen = {{9,8},{7,6},{5,4},{3,2},{1,0}};
+	int[][] sorted;
 	final CountDownLatch doneSignal;
 	MyThread[] threads;
 	CyclicBarrier barrier;
-	int counter = 0;
 	
-	Controller(int amountZahlen) throws InterruptedException, BrokenBarrierException{
-		zahlen = new int[amountZahlen];
-		sorted = new int[amountZahlen];
-		maxThreads = zahlen.length;
-		threads = new MyThread[amountZahlen];
-		barrier = new CyclicBarrier(maxThreads + 1);
+	Controller(int amountZahlen, int amountCores) throws InterruptedException, BrokenBarrierException{
+		cores = amountCores;
+		coreNumbers = amountZahlen/cores;
+		zahlen = new int[cores][coreNumbers];
+		sorted = new int[cores][coreNumbers];
+		doneSignal = new CountDownLatch(cores);
+		threads = new MyThread[cores];
+		barrier = new CyclicBarrier(cores);
 		
 	}
 	
 	public void generateNumbers(int numbers) {
 		Random rand = new Random(seed);
 		for(int i = 0; i < numbers; ++i) {
-			zahlen[i] = rand.nextInt(maxWerte);
+			for(int j = 0; j < coreNumbers; ++j) {
+				zahlen[i][j] = rand.nextInt(maxWerte);
+			}
 		}
 	}
 	
 	public void doit() throws InterruptedException, BrokenBarrierException {
-		for(int i = 0; i < maxThreads; ++i) {
-			threads[i] = new MyThread(i, zahlen[i], barrier, maxThreads);
+		for(int i = 0; i < cores; ++i) {
+				threads[i] = new MyThread(i, zahlen[i], barrier, cores, doneSignal);
 		}
 		
-		for(int i = 0; i < maxThreads-1; ++i) {
+		for(int i = 0; i < cores-1; ++i) {
 			threads[i].setNext(threads[i+1]);
 		}
 		
-		for(int i = 0; i < maxThreads; ++i) {
+		for(int i = 1; i < cores; ++i) {
+			threads[i].setPrev(threads[i-1]);
+		}
+		
+		for(int i = 0; i < cores; ++i) {
 			threads[i].start();
 		}
 		
-		//durch CountDownLatch ersetzen
-		/*while(counter < maxThreads) {
-			barrier.await();
-			++counter;
-			barrier.await();
-		}*/
+		doneSignal.await();
 		
-		for(int i = 0; i < maxThreads; ++i) {
-			sorted[i] = threads[i].getNumber();
+		for(int i = 0; i < cores; ++i) {
+			sorted[i] = threads[i].getNumbers();
 		}
 	}
 	
 	public void printIt() {
 		for(int i = 0; i < threads.length; ++i) {
-			System.out.println("Kern: "+(i+1)+" Nummer: "+threads[i].getNumber());
+				System.out.print("Kern: "+(i+1)+" Nummern: ");
+			for(int j = 0; j < sorted[i].length; ++j) {
+				System.out.print("\t"+sorted[i][j]);
+			}
+			System.out.println();
 		}
 	}
 	
 	public String isSorted() {
-		Arrays.sort(zahlen);
-		for(int i = 0; i < sorted.length; ++i) {
-			if(sorted[i] != zahlen[i]) {
-				return "Zahl: "+sorted[i]+" nicht sortiert.";
+		for(int i = 0; i < threads.length; ++i) {
+			for(int j = 0; j < sorted.length; ++j) {
+				if(sorted[i][j] != zahlen[i][j]) {
+					return "Zahl: "+sorted[i][j]+" nicht sortiert. Zahl: "+zahlen[i][j];
+				}
 			}
 		}
 		return "Alle Zahlen sortiert.";
 	}
 	
 	public static void main(String[] args) throws InterruptedException, BrokenBarrierException {
-		int maxNumbers = 100;
-		Controller c = new Controller(maxNumbers);
-		c.generateNumbers(maxNumbers);
+		int maxNumbers = 10000;
+		int numberOfCores = 100;
+		Controller c = new Controller(maxNumbers, numberOfCores);
+		c.generateNumbers(numberOfCores);
 		if(c.printItBefore) {
 			System.out.println("Vor dem Sortieren");
 			c.printIt();
