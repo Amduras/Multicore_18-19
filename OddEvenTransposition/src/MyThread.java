@@ -12,19 +12,27 @@ public class MyThread extends Thread{
 	private int counter = 0;
 	private int maxThreads;
 	private final CountDownLatch doneSignal;
+	private int startSort;
+	@SuppressWarnings("unused")
+	private final Integer ARRAYSORT = 1, BUBBLESORT = 2;
 	
-	public MyThread(Integer name, int[] numbers, CyclicBarrier barrier, int maxThreads, CountDownLatch doneSignal) {
+	public MyThread(Integer name, int[] numbers, CyclicBarrier barrier, int maxThreads, CountDownLatch doneSignal, int startSort) {
 		myId = name;
 		this.numbers = numbers;
 		this.barrier = barrier;
 		this.maxThreads = maxThreads;
 		this.doneSignal = doneSignal;
+		this.startSort = startSort;
 	}
 	
 	@Override
 	public void run() {
 		while(counter < maxThreads) {
-			Arrays.sort(numbers);
+			if(startSort == ARRAYSORT) {
+				Arrays.sort(numbers);
+			} else {
+				preSort();
+			}
 			try {
 				barrier.await();
 			} catch (InterruptedException | BrokenBarrierException e2) {
@@ -50,7 +58,26 @@ public class MyThread extends Thread{
 		doneSignal.countDown();
 	}
 	
-	public int[] swap() {
+	private void preSort() {
+		if(startSort == BUBBLESORT) {
+			bubbleSort();
+		}
+	}
+	
+	private void bubbleSort() {
+		for (int i = 1; i < numbers.length; ++i) {
+			for (int j = 0; j < numbers.length - i; ++j) {
+				if (numbers[j] > numbers[j + 1]) {
+					final int tmp = numbers[j + 1];
+					numbers[j + 1] = numbers[j];
+					numbers[j] = tmp;
+
+				}
+			}
+		}
+	}
+	
+	private int[] swap() {
 		if (counter % 2 == myId % 2 && next != null) {
 			return sortEven();
 		} else if (counter % 2 != myId % 2 && prev != null) {
@@ -59,7 +86,7 @@ public class MyThread extends Thread{
 		return numbers;
 	}
 	
-	int[] sortEven() {
+	private int[] sortEven() {
 		int[] nextDigits = next.getNumbers();
 		int[] sorted = new int[numbers.length];
 		int i = 0, j = 0, k = 0;
@@ -81,7 +108,7 @@ public class MyThread extends Thread{
 		}
 	}
 	
-	int[] sortUneven() {
+	private int[] sortUneven() {
 		int[] prevDigits = prev.getNumbers();
 		int[] sorted = new int[numbers.length];
 		int i = prevDigits.length - 1, j = numbers.length - 1, k = numbers.length - 1;
