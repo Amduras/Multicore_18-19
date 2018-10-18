@@ -33,29 +33,23 @@ public class MyThread extends Thread{
 			} else {
 				preSort();
 			}
-			try {
-				barrier.await();
-			} catch (InterruptedException | BrokenBarrierException e2) {
-				// TODO Auto-generated catch block
-				e2.printStackTrace();
-			}
+			waitAll();
 			int[] tmp = swap();
-			try {
-				barrier.await();
-			} catch (InterruptedException | BrokenBarrierException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
+			waitAll();
 			numbers = tmp;
 			++counter;
-			try {
-				barrier.await();
-			} catch (InterruptedException | BrokenBarrierException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			waitAll();
 		}
 		doneSignal.countDown();
+	}
+	
+	private void waitAll() {
+		try {
+			barrier.await();
+		} catch (InterruptedException | BrokenBarrierException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	private void preSort() {
@@ -71,7 +65,6 @@ public class MyThread extends Thread{
 					final int tmp = numbers[j + 1];
 					numbers[j + 1] = numbers[j];
 					numbers[j] = tmp;
-
 				}
 			}
 		}
