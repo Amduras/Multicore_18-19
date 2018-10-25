@@ -1,9 +1,10 @@
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.Random;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
+
+import javax.swing.JFrame;
 
 
 public class Controller {
@@ -16,8 +17,11 @@ public class Controller {
 	boolean printItAfter = false;
 	int seed = 1234;
 	int maxWerte = Integer.MAX_VALUE;
-	int cores;
+	int maxCores;
 	int coreNumbers;
+	int cores;
+	int maxRuns;
+	int runs;
 	private int startSort = ARRAYSORT;
 	/***********************************/
 	
@@ -32,25 +36,22 @@ public class Controller {
 	int[] sorted;
 	int[] zahlenSorted;
 	int[] zahlenPar;
-	final CountDownLatch doneSignal;
+	double[][] time;
+	CountDownLatch doneSignal;
 	MyThread[] threads;
 	CyclicBarrier barrier;
 	
-	Controller(int amountZahlen, int amountCores) throws InterruptedException, BrokenBarrierException{
-		cores = amountCores;
+	Controller(int amountZahlen, int maxCores, int maxRuns) throws InterruptedException, BrokenBarrierException{
+		this.maxCores = maxCores;
+		this.maxRuns = maxRuns;
 		if(startSort == BUBBLESORT) {
-			amountZahlen/=100;
+			amountZahlen/=1000;
 		}
+		time = new double[maxCores][1];
 		this.amountZahlen = amountZahlen;
-		coreNumbers = amountZahlen/cores;
 		zahlenSorted = new int[amountZahlen];
 		zahlenPar = new int[amountZahlen];
-		zahlen = new int[cores][coreNumbers];
 		sorted = new int[amountZahlen];
-		doneSignal = new CountDownLatch(cores);
-		threads = new MyThread[cores];
-		barrier = new CyclicBarrier(cores);
-		
 	}
 	
 	public void generateNumbers(int numbers) {
@@ -58,7 +59,7 @@ public class Controller {
 		Random rand = new Random(seed);
 		for(int i = 0; i < numbers; ++i) {
 			for(int j = 0; j < coreNumbers; ++j) {
-				zahlen[i][j] = rand.nextInt(maxWerte);
+				zahlen[i][j] = rand.nextInt();
 				zahlenSorted[x] = zahlen[i][j];
 				zahlenPar[x] = zahlen[i][j];
 				++x;
@@ -67,43 +68,75 @@ public class Controller {
 	}
 	
 	public void doit() throws InterruptedException, BrokenBarrierException {
-		for(int i = 0; i < cores; ++i) {
-				threads[i] = new MyThread(i, zahlen[i], barrier, cores, doneSignal, startSort);
-		}
-		
-		for(int i = 0; i < cores-1; ++i) {
-			threads[i].setNext(threads[i+1]);
-		}
-		
-		for(int i = 1; i < cores; ++i) {
-			threads[i].setPrev(threads[i-1]);
-		}
-		start = System.nanoTime();
-		for(int i = 0; i < cores; ++i) {
-			threads[i].start();
-		}
-		
-		doneSignal.await();
-		stop = System.nanoTime();
-		for(int i = 0; i < cores; ++i) {
-			//sorted[i] = threads[i].getNumbers();
-			System.arraycopy(threads[i].getNumbers(), 0, sorted, (i * coreNumbers), threads[i].getNumbers().length);
+		for(cores = 1; cores <= maxCores; cores*=2) {
+			System.out.println("Kerne: " + cores);
+			System.out.print("Run: ");
+			for(runs = 0; runs < maxRuns; ++runs) {
+				System.out.print("#");
+				if((runs + 1) % 5 == 0 && runs != 0) {
+					System.out.print("  ");
+				}
+				System.gc();
+				coreNumbers = amountZahlen / cores;
+				zahlen = new int[cores][coreNumbers];
+				doneSignal = new CountDownLatch(cores);
+				threads = new MyThread[cores];
+				barrier = new CyclicBarrier(cores);
+
+				generateNumbers(cores);
+				for (int i = 0; i < cores; ++i) {
+					threads[i] = new MyThread(i, zahlen[i], barrier, cores, doneSignal, startSort);
+				}
+
+				for (int i = 0; i < cores - 1; ++i) {
+					threads[i].setNext(threads[i + 1]);
+				}
+
+				for (int i = 1; i < cores; ++i) {
+					threads[i].setPrev(threads[i - 1]);
+				}
+
+				start = System.nanoTime();
+				for (int i = 0; i < cores; ++i) {
+					threads[i].start();
+				}
+
+				doneSignal.await();
+				stop = System.nanoTime();
+				if(time[cores-1][0] < (stop - start) / 1000000.0 || time[cores-1][0] == 0) {
+					time[cores-1][0] = (stop - start) / 1000000.0;
+				}
+				
+				for (int i = 0; i < cores; ++i) {
+					System.arraycopy(threads[i].getNumbers(), 0, sorted, (i * coreNumbers),
+							threads[i].getNumbers().length);
+				}
+
+//				System.out.println("Zeit zum sortieren von " + amountZahlen + " Zahlen mit " + threads.length
+//						+ " Kernen: " + ((stop - start) / 1000000.0 + "ms"));
+				
+				// System.out.println("Zeit zum sortieren von "+amountZahlen+" Zahlen mit
+				// Arrays.sort: "+((stopSeq - startSeq) / 1000000.0+"ms"));
+//				System.out.println("Zeit zum sortieren von " + amountZahlen + " Zahlen mit Arrays.parralelSort: "
+//						+ ((stopPar - startPar) / 1000000.0 + "ms"));
+			}
+			
+			if (checkSorted) {
+				System.out.println(isSorted());
+			}
+			
+			System.out.println("Beste Zeit: "+time[cores-1][0]);
+			System.out.println("----------------------------------------------------------------------------------");
 		}
 	}
 	
 	public void printIt() {
-		/*for(int i = 0; i < threads.length; ++i) {
-				System.out.print("Kern: "+(i+1)+" Nummern: ");
-			for(int j = 0; j < sorted[i].length; ++j) {
-				System.out.print(sorted[i][j]+" ");
-			}
-			System.out.println();
-		}*/
 		int x = 0;
 		int kerne = 1;
 		System.out.print("Kern: "+(kerne++)+" Nummern: ");
 		for(int i = 0; i < sorted.length; ++i) {
-			if(x == coreNumbers) {
+			//if(x == coreNumbers) {
+			if(i % coreNumbers == 0) {
 				System.out.println();
 				System.out.print("Kern: "+(kerne++)+" Nummern: ");
 				x = 0;
@@ -114,62 +147,29 @@ public class Controller {
 	}
 	
 	public String isSorted() {
-		/*int x = 0;
+		/*startSeq = System.nanoTime();
 		Arrays.sort(zahlenSorted);
-		for(int i = 0; i < threads.length; ++i) {
-			for(int j = 0; j < sorted[i].length; ++j) {
-				if(sorted[i][j] != zahlenSorted[x]) {
-					return "Zahl: "+sorted[i][j]+" nicht sortiert. Zahl: "+zahlenSorted[x];
-				}
-				++x;
-			}
-		}
-		return "Alle Zahlen sortiert.";
-		*/
-		startSeq = System.nanoTime();
-		Arrays.sort(zahlenSorted);
-		stopSeq = System.nanoTime();
+		stopSeq = System.nanoTime();*/
 		startPar = System.nanoTime();
 		Arrays.parallelSort(zahlenPar);
 		stopPar = System.nanoTime();
 		if(sorted.length == amountZahlen) {
 			for(int i  = 0; i < sorted.length; ++i) {
-				if(sorted[i] != zahlenSorted[i]) {
-					return "Zahlen: "+sorted[i]+" nicht Sortiert. Erwartete Zahl: "+zahlenSorted[i];
+				if(sorted[i] != zahlenPar[i]) {
+					return "Kerne: "+cores+" Zahlen: "+sorted[i]+" nicht Sortiert. Erwartete Zahl: "+zahlenSorted[i];
 				}
 			}
-			return "Alle Zahlen sortiert";
+			return "\nAlle Zahlen sortiert";
 		} else {
 			return "Zahlen verloren";
 		}
 	}
-	public static void main(String[] args) throws InterruptedException, BrokenBarrierException {
-		int maxNumbers = 40000000;
-		int maxCores = 4;
-		
-		if(maxNumbers % maxCores != 0) {
-			System.out.println("Zahlen lassen sich nicht auffteilen");
-		} else {
-			Controller c = new Controller(maxNumbers, maxCores);
-			c.generateNumbers(maxCores);
-			if(c.printItBefore) {
-				System.out.println("Vor dem Sortieren");
-				c.printIt();
-			}
-			//c.start = System.nanoTime();
-			c.doit();
-			//c.stop = System.nanoTime();
-			System.out.println("Zeit zum sortieren von "+maxNumbers+" Zahlen mit "+maxCores+" Kernen: "+((c.stop - c.start) / 1000000.0+"ms"));			
-			if(c.checkSorted) {
-				System.out.println(c.isSorted());
-			}
-			System.out.println("Zeit zum sortieren von "+maxNumbers+" Zahlen mit Arrays.sort: "+((c.stopSeq - c.startSeq) / 1000000.0+"ms"));
-			System.out.println("Zeit zum sortieren von "+maxNumbers+" Zahlen mit Arrays.parralelSort: "+((c.stopPar - c.startPar) / 1000000.0+"ms"));
-			if(c.printItAfter) {
-				System.out.println("Nach dem Sortieren");
-				c.printIt();
-			}
-		}
+	public static void main(String[] args) throws InterruptedException, BrokenBarrierException { 
+//		args[0] = amountZahlen
+//		args[1] = maxCores
+//		args[2] = maxRuns
+		Controller c = new Controller(Integer.parseInt(args[0]), Integer.parseInt(args[1]), Integer.parseInt(args[2]));
+		c.doit();
 	}
 	
 }
