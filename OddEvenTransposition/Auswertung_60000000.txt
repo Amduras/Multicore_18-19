@@ -1,0 +1,40 @@
+Zahlenmenge: 60,000,000
+ARRAYSORT
+Kerne: 1	9201.006164 ms
+Kerne: 2	4670.481336 ms
+Kerne: 3	3371.60624 ms
+Kerne: 4	2576.447574 ms
+Kerne: 5	2161.981802 ms
+Kerne: 6	1906.013576 ms
+Kerne: 8	1547.980042 ms
+Kerne: 10	1375.51897 ms
+Kerne: 12	1349.148377 ms
+Kerne: 16	1285.185498 ms
+Kerne: 20	1352.130546 ms
+Kerne: 25	1366.09356 ms
+Kerne: 30	1450.995025 ms
+Kerne: 40	1647.208374 ms
+Kerne: 50	2024.44238 ms
+Kerne: 60	2306.81993 ms
+Kerne: 75	2730.448734 ms
+Kerne: 80	2896.654858 ms
+Zahlenmenge: 60,000
+BUBBLESORT
+Kerne: 1	6524.287624 ms
+Kerne: 2	1647.992426 ms
+Kerne: 3	740.157785 ms
+Kerne: 4	419.294743 ms
+Kerne: 5	271.949967 ms
+Kerne: 6	192.928613 ms
+Kerne: 8	111.386468 ms
+Kerne: 10	82.699687 ms
+Kerne: 12	61.748999 ms
+Kerne: 16	46.86209 ms
+Kerne: 20	73.563886 ms
+Kerne: 25	103.591353 ms
+Kerne: 30	185.001074 ms
+Kerne: 40	325.075145 ms
+Kerne: 50	459.637029 ms
+Kerne: 60	748.64028 ms
+Kerne: 75	1072.554426 ms
+Kerne: 80	414.689463 ms

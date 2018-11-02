@@ -73,7 +73,11 @@ public class Controller {
 	public void doit() throws InterruptedException, BrokenBarrierException {
 		for (startSort = ARRAYSORT; startSort <= BUBBLESORT; ++startSort) {
 			if (startSort == BUBBLESORT) {
-				amountZahlen /= 1000;
+				if(amountZahlen >= 100000000) {
+					amountZahlen /= 10000;
+				} else if(amountZahlen > 1000){
+					amountZahlen /= 1000;
+				}
 			}
 			zahlenSorted = new int[amountZahlen];
 			zahlenPar = new int[amountZahlen];
@@ -85,7 +89,7 @@ public class Controller {
 					++cores;
 				}
 				
-				if(cores >= 20) {
+				if(cores > 20) {
 					cores+=4;
 				}
 				
@@ -161,17 +165,11 @@ public class Controller {
 	}
 	
 	private void writeIt() {
-		String timestamp = LocalDateTime.now().toString().substring(0, LocalDateTime.now().toString().length() - 4);
-		timestamp = timestamp.replace(':', '-');
-		DecimalFormat nf = new DecimalFormat();
 		try {
-			FileWriter writer = new FileWriter("Auswertung vom " + timestamp + ".txt", true);
-			if (startSort == 1 && cores == 1) {
-				writer.write("Zahlenmenge: " + nf.format((amountZahlen * 1000)));
-				writer.write(System.lineSeparator());
-			}
-			
+			FileWriter writer = new FileWriter("Auswertung.txt", true);
 			if (cores == 1) {
+				writer.write("Zahlenmenge: " + nf.format((amountZahlen)));
+				writer.write(System.lineSeparator());
 				String str = (startSort == 1 ? "ARRAYSORT" : "BUBBLESORT");
 				writer.write(str);
 				writer.write(System.lineSeparator());
