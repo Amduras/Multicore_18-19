@@ -27,13 +27,13 @@ public class MyThread extends Thread{
 	
 	@Override
 	public void run() {
+		if(startSort == ARRAYSORT) {
+			Arrays.sort(numbers);
+		} else {
+			preSort();
+		}
+		waitAll();
 		while(counter < maxThreads) {
-			if(startSort == ARRAYSORT) {
-				Arrays.sort(numbers);
-			} else {
-				preSort();
-			}
-			waitAll();
 			int[] tmp = swap();
 			waitAll();
 			numbers = tmp;
@@ -162,7 +162,6 @@ public class MyThread extends Thread{
 	public MyThread getPrev() {
 		return prev;
 	}
-
 	public void setPrev(MyThread prev) {
 		this.prev = prev;
 	}
