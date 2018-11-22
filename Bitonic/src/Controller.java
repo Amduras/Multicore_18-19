@@ -10,6 +10,7 @@ public class Controller {
 	final int cubeSizeMax;
 	final int cubeSizeStart;
 	final int cubeSizeInc;
+	final int currentCubeSize;
 	final int seed;
 	final int maxRuns;
 //	#########################
@@ -35,6 +36,9 @@ public class Controller {
 		zahlen = new int[amountZahlen];
 		sorted = new int[amountZahlen];
 		threads = new MyThread[amountZahlen];
+		currentCubeSize = 3;
+		barrier = new CyclicBarrier(amountZahlen);
+		doneSignal = new CountDownLatch(amountZahlen);
 	}
 	
 	public void doit() {
@@ -48,7 +52,7 @@ public class Controller {
 		Arrays.parallelSort(sorted);
 		
 		for(int i = 0; i < zahlen.length; ++i) {
-			threads[i] = new MyThread(i, barrier, doneSignal, threads);
+			threads[i] = new MyThread(i, barrier, doneSignal, threads, currentCubeSize);
 			final int[] tmp = new int[1];
 			System.arraycopy(zahlen, i, tmp, 0, 1);
 			threads[i].setNumbers(tmp);
@@ -58,8 +62,24 @@ public class Controller {
 			System.out.print(threads[i].numbers[0]+" ");
 		}
 		
+		System.out.println();
 		
+		for(int i = 0; i < threads.length; ++i) {
+			threads[i].start();
+		}
 		
+		try {
+			doneSignal.await();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		System.out.println("Done");
+		
+		for(int i = 0; i < threads.length; ++i) {
+			System.out.print(threads[i].numbers[0]+" ");
+		}
 		/*cores = (int) (Math.pow(2, currentSize));
 		for (int i = 0; i < maxRuns; ++i) {
 			System.out.print("#");
