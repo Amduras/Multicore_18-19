@@ -1,4 +1,5 @@
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.CyclicBarrier;
@@ -33,8 +34,8 @@ public class MyThread extends Thread{
 			int steps = stages;
 			while(steps >= 0) {
 				final MyThread compareThread = threadlist[id ^ 1 << steps];
-				final int temper = id % (int) (Math.pow(2, stages + 2));
-				if (temper < (int) (Math.pow(2, stages + 1))) {
+				final int temp = id % (int) (Math.pow(2, stages + 2));
+				if (temp < (int) (Math.pow(2, stages + 1))) {
 					if (id < compareThread.id) {
 						tmp = sortEven(compareThread.numbers);
 					} else {
@@ -61,20 +62,22 @@ public class MyThread extends Thread{
 		//Sortieren der listen
 		doneSignal.countDown();
 	}
-	
+
 	private int[] sortEven(int[] otherNumbers) {
 		int[] sorted = new int[numbers.length];
 		int i = 0, j = 0, k = 0;
 		if(numbers[numbers.length - 1] > otherNumbers[0]) {
 			while(k < numbers.length) {
-				if(numbers[i] <= otherNumbers[j]) {
-					sorted[k] = numbers[i];
-					++k;
-					++i;
-				} else if(numbers[i] > otherNumbers[j]) {
-					sorted[k] = otherNumbers[j];
-					++k;
-					++j;
+				if (i >= numbers.length) {
+					sorted[k++] = otherNumbers[j++];
+				} else if (j >= otherNumbers.length) {
+					sorted[k++] = numbers[i++];
+				} else {
+					if(numbers[i] <= otherNumbers[j]) {
+						sorted[k++] = numbers[i++];
+					} else if(numbers[i] > otherNumbers[j]) {
+						sorted[k++] = otherNumbers[j++];
+					}
 				}
 			}
 			return sorted;
@@ -88,14 +91,16 @@ public class MyThread extends Thread{
 		int i = otherNumbers.length - 1, j = numbers.length - 1, k = numbers.length - 1;
 		if(numbers[0] < otherNumbers[otherNumbers.length - 1]) {
 			while(k >= 0) {
-				if(otherNumbers[i] > numbers[j]) {
-					sorted[k] = otherNumbers[i];
-					--k;
-					--i;
-				} else if(otherNumbers[i] <= numbers[j]) {
-					sorted[k] = numbers[j];
-					--k;
-					--j;
+				if( i < 0) {
+					sorted[k--] = otherNumbers[j--];
+				} else if(j < 0) {
+					sorted[k--] = numbers[i--];
+				} else {
+					if(otherNumbers[i] > numbers[j]) {
+						sorted[k--] = otherNumbers[i--];
+					} else if(otherNumbers[i] <= numbers[j]) {
+						sorted[k--] = numbers[j--];
+					}
 				}
 			}
 			return sorted;

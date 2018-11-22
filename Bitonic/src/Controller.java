@@ -34,8 +34,8 @@ public class Controller {
 		this.seed = seed;
 		zahlen = new int[amountZahlen];
 		sorted = new int[amountZahlen];
-		threads = new MyThread[2];
-		currentCubeSize = 1;
+		currentCubeSize = 3;
+		threads = new MyThread[(int) Math.pow(2, currentCubeSize)];
 		barrier = new CyclicBarrier(threads.length);
 		doneSignal = new CountDownLatch(threads.length);
 	}
@@ -50,7 +50,7 @@ public class Controller {
 		System.arraycopy(zahlen, 0, sorted, 0, zahlen.length);
 		Arrays.parallelSort(sorted);
 		
-		coreNumbers = amountZahlen / (int) (Math.pow(2, currentCubeSize));
+		coreNumbers = amountZahlen / threads.length;
 		for(int i = 0; i < threads.length; ++i) {
 			threads[i] = new MyThread(i, barrier, doneSignal, threads, currentCubeSize);
 			final int[] tmp = new int[coreNumbers];
@@ -114,12 +114,6 @@ public class Controller {
 //		args[4] = maxRuns
 //		args[5] = seed;
 		
-//		args[0] = "8";
-//		args[1] = "10";
-//		args[2] = "1";
-//		args[3] = "1";
-//		args[4] = "1";
-//		args[5] = "42";
 		Controller c = new Controller(Integer.parseInt(args[0]), Integer.parseInt(args[1]), 
 				Integer.parseInt(args[2]), Integer.parseInt(args[3]), Integer.parseInt(args[4]),
 				Integer.parseInt(args[5]));
