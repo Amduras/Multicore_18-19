@@ -30,6 +30,19 @@ public class test {
 		
 	}
 	
+	public void test() {
+		int stages = 0;
+		int size = 3;
+		int steps = 0;
+		
+		while(stages < size) {
+			steps = stages;
+			while(stages >= 0) {
+				//int othernumber = numbers[] ^ 1 << stages;
+			}
+		}
+	}
+	
 	public void printArray(int[] a) {
 		for (int i=0; i<a.length; ++i) 
             System.out.print(a[i] + " "); 
@@ -39,6 +52,7 @@ public class test {
 		
 		test t = new test();
 		t.sort(t.numbers, 0, t.numbers.length, t.UP);
+		t.test();
 		//t.printArray(t.folge);
 	}
 }

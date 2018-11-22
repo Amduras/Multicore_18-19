@@ -17,7 +17,8 @@ public class Controller {
 	int currentSize = 0;
 	int cores;
 	int[] zahlen;
-	int[] testFolge = {2,5,6,10,8,7,4,1};
+//	int[] testFolge = {2, 5, 6, 10, 8, 7, 4, 1};
+	int[] testFolge = {3, 7, 4, 8, 6, 2, 1, 5};
 	int[] sorted;
 	int[] controll;
 	MyThread[] threads;
@@ -38,14 +39,28 @@ public class Controller {
 	
 	public void doit() {
 		System.out.println("Initialisierung");
-//		generateNumbers(amountZahlen);
+		generateNumbers(amountZahlen);
 		for(int i = 0; i < zahlen.length; ++i) {
 			System.out.print(zahlen[i]+" ");
 		}
 		System.out.println("\nAbgeschlossen");
 		System.arraycopy(zahlen, 0, sorted, 0, zahlen.length);
 		Arrays.parallelSort(sorted);
-		cores = (int) (Math.pow(2, currentSize));
+		
+		for(int i = 0; i < zahlen.length; ++i) {
+			threads[i] = new MyThread(i, barrier, doneSignal, threads);
+			final int[] tmp = new int[1];
+			System.arraycopy(zahlen, i, tmp, 0, 1);
+			threads[i].setNumbers(tmp);
+		}
+		
+		for(int i = 0; i < threads.length; ++i) {
+			System.out.print(threads[i].numbers[0]+" ");
+		}
+		
+		
+		
+		/*cores = (int) (Math.pow(2, currentSize));
 		for (int i = 0; i < maxRuns; ++i) {
 			System.out.print("#");
 			if ((i + 1) % 5 == 0) {
@@ -54,9 +69,9 @@ public class Controller {
 			if ((i + 1) % 10 == 0) {
 				System.out.print("\t");
 			}
-			generateNumbers(amountZahlen);
+			
 			System.gc();
-		}
+		}*/
 	}
 	
 	public void generateNumbers(int numbers) {
