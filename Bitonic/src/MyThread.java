@@ -12,7 +12,7 @@ public class MyThread extends Thread{
 	MyThread[] threadlist;
 	CyclicBarrier barrier;
 	CountDownLatch doneSignal;
-	
+	int counter = 0;
 	
 	MyThread(int id, CyclicBarrier barrier, CountDownLatch doneSignal, MyThread[] list, int cubeSize){
 		this.id = id;
@@ -24,10 +24,11 @@ public class MyThread extends Thread{
 	
 	@Override
 	public void run() {
+		//Presort der lokalenlisten
 		Arrays.sort(numbers);
 		waitAll();
 		int[] tmp = new int[numbers.length];
-		//Presort
+		//Zahlenfolgen Bitonisch machen
 		while(stages < cubeSize-1) {
 			int steps = stages;
 			while(steps >= 0) {
@@ -46,6 +47,7 @@ public class MyThread extends Thread{
 						tmp = sortEven(compareThread.numbers);
 					}
 				}
+				++counter;
 				waitAll();
 				numbers = tmp;
 				waitAll();
@@ -53,55 +55,12 @@ public class MyThread extends Thread{
 			}
 			++stages;
 		}
+		waitAll();
+		System.out.println("Thread: "+id+" Schritte: "+counter);
+		waitAll();
+		//Sortieren der listen
 		doneSignal.countDown();
 	}
-	
-	
-//	private int[] sortUneven(int[] otherNumbers) {
-//		int[] sorted = new int[numbers.length];
-//		int i = numbers.length - 1, j = otherNumbers.length - 1, k = numbers.length - 1;
-//		if (numbers[0] < otherNumbers[otherNumbers.length - 1]) {
-//			while (k >= 0) {
-//				if (i < 0) {
-//					sorted[k--] = otherNumbers[j--];
-//				} else if (j < 0) {
-//					sorted[k--] = numbers[i--];
-//				} else {
-//					if (otherNumbers[j] > numbers[i]) {
-//						sorted[k--] = otherNumbers[j--];
-//					} else if (otherNumbers[j] <= numbers[i]) {
-//						sorted[k--] = numbers[i--];
-//					}
-//				}
-//			}
-//			return sorted;
-//		} else {
-//			return numbers;
-//		}
-//	}
-//
-//	private int[] sortEven(int[] otherNumbers) {
-//		final int[] sorted = new int[numbers.length];
-//		int i = 0, j = 0, k = 0;
-//		if (numbers[numbers.length - 1] > otherNumbers[0]) {
-//			while (k < numbers.length) {
-//				if (i >= numbers.length) {
-//					sorted[k++] = otherNumbers[j++];
-//				} else if (j >= otherNumbers.length) {
-//					sorted[k++] = numbers[i++];
-//				} else {
-//					if (numbers[i] <= otherNumbers[j]) {
-//						sorted[k++] = numbers[i++];
-//					} else if (numbers[i] > otherNumbers[j]) {
-//						sorted[k++] = otherNumbers[j++];
-//					}
-//				}
-//			}
-//			return sorted;
-//		} else {
-//			return numbers;
-//		}
-//	}
 	
 	private int[] sortEven(int[] otherNumbers) {
 		int[] sorted = new int[numbers.length];

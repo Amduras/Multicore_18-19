@@ -15,16 +15,15 @@ public class Controller {
 	final int maxRuns;
 //	#########################
 	
-	int currentSize = 0;
 	int cores;
 	int[] zahlen;
-//	int[] testFolge = {2, 5, 6, 10, 8, 7, 4, 1};
 	int[] testFolge = {3, 7, 4, 8, 6, 2, 1, 5};
 	int[] sorted;
 	int[] controll;
 	MyThread[] threads;
 	CyclicBarrier barrier;
 	CountDownLatch doneSignal;
+	int coreNumbers;
 	
 	Controller(int amountZahlen, int cuubeSizeMax, int cubeSizeStart, int cubeSizeInc, int maxRuns, int seed){
 		this.amountZahlen = amountZahlen;
@@ -35,10 +34,10 @@ public class Controller {
 		this.seed = seed;
 		zahlen = new int[amountZahlen];
 		sorted = new int[amountZahlen];
-		threads = new MyThread[amountZahlen];
-		currentCubeSize = 3;
-		barrier = new CyclicBarrier(amountZahlen);
-		doneSignal = new CountDownLatch(amountZahlen);
+		threads = new MyThread[2];
+		currentCubeSize = 1;
+		barrier = new CyclicBarrier(threads.length);
+		doneSignal = new CountDownLatch(threads.length);
 	}
 	
 	public void doit() {
@@ -51,18 +50,13 @@ public class Controller {
 		System.arraycopy(zahlen, 0, sorted, 0, zahlen.length);
 		Arrays.parallelSort(sorted);
 		
-		for(int i = 0; i < zahlen.length; ++i) {
+		coreNumbers = amountZahlen / (int) (Math.pow(2, currentCubeSize));
+		for(int i = 0; i < threads.length; ++i) {
 			threads[i] = new MyThread(i, barrier, doneSignal, threads, currentCubeSize);
-			final int[] tmp = new int[1];
-			System.arraycopy(zahlen, i, tmp, 0, 1);
+			final int[] tmp = new int[coreNumbers];
+			System.arraycopy(zahlen, i * coreNumbers, tmp, 0, coreNumbers);
 			threads[i].setNumbers(tmp);
 		}
-		
-		for(int i = 0; i < threads.length; ++i) {
-			System.out.print(threads[i].numbers[0]+" ");
-		}
-		
-		System.out.println();
 		
 		for(int i = 0; i < threads.length; ++i) {
 			threads[i].start();
@@ -77,8 +71,18 @@ public class Controller {
 		
 		System.out.println("Done");
 		
-		for(int i = 0; i < threads.length; ++i) {
-			System.out.print(threads[i].numbers[0]+" ");
+		for (int i = 0; i < threads.length; ++i) {
+			System.arraycopy(threads[i].getNumbers(), 0, sorted, (i * coreNumbers),
+					threads[i].getNumbers().length);
+		}
+		
+		for(int i = 0; i < sorted.length; ++i) {
+			System.out.print(sorted[i]);
+			if((i+1) % coreNumbers == 0) {
+				System.out.print(" ");
+			} else {
+				System.out.print("-");
+			}
 		}
 		/*cores = (int) (Math.pow(2, currentSize));
 		for (int i = 0; i < maxRuns; ++i) {
@@ -97,8 +101,8 @@ public class Controller {
 	public void generateNumbers(int numbers) {
 		Random rand = new Random(seed);
 		for (int i = 0; i < numbers; ++i) {
-			//zahlen[i] = rand.nextInt(100);
-			zahlen[i] = testFolge[i];
+			zahlen[i] = rand.nextInt(100);
+			//zahlen[i] = testFolge[i];
 		}
 	}
 	
