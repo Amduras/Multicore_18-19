@@ -24,17 +24,15 @@ public class MyThread extends Thread{
 	
 	@Override
 	public void run() {
-		//Presort der lokalenlisten
 		Arrays.sort(numbers);
 		waitAll();
 		int[] tmp = new int[numbers.length];
-		//Zahlenfolgen Bitonisch machen
-		while(stages < cubeSize-1) {
+		while(stages < cubeSize) {
 			int steps = stages;
 			while(steps >= 0) {
 				final MyThread compareThread = threadlist[id ^ 1 << steps];
-				final int temper = id % (int) (Math.pow(2, stages + 2));
-				if (temper < (int) (Math.pow(2, stages + 1))) {
+				final int sort = id % (int) (Math.pow(2, stages + 2));
+				if (sort < (int) (Math.pow(2, stages + 1))) {
 					if (id < compareThread.id) {
 						tmp = sortEven(compareThread.numbers);
 					} else {
@@ -56,9 +54,6 @@ public class MyThread extends Thread{
 			++stages;
 		}
 		waitAll();
-		System.out.println("Thread: "+id+" Schritte: "+counter);
-		waitAll();
-		//Sortieren der listen
 		doneSignal.countDown();
 	}
 	
@@ -68,13 +63,9 @@ public class MyThread extends Thread{
 		if(numbers[numbers.length - 1] > otherNumbers[0]) {
 			while(k < numbers.length) {
 				if(numbers[i] <= otherNumbers[j]) {
-					sorted[k] = numbers[i];
-					++k;
-					++i;
+					sorted[k++] = numbers[i++];
 				} else if(numbers[i] > otherNumbers[j]) {
-					sorted[k] = otherNumbers[j];
-					++k;
-					++j;
+					sorted[k++] = otherNumbers[j++];
 				}
 			}
 			return sorted;
@@ -89,13 +80,9 @@ public class MyThread extends Thread{
 		if(numbers[0] < otherNumbers[otherNumbers.length - 1]) {
 			while(k >= 0) {
 				if(otherNumbers[i] > numbers[j]) {
-					sorted[k] = otherNumbers[i];
-					--k;
-					--i;
+					sorted[k--] = otherNumbers[i--];
 				} else if(otherNumbers[i] <= numbers[j]) {
-					sorted[k] = numbers[j];
-					--k;
-					--j;
+					sorted[k--] = numbers[j--];
 				}
 			}
 			return sorted;
